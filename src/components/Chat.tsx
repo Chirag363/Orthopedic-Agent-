@@ -1,12 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, Send, Image as ImageIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Image as ImageIcon, Send, Upload } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  imageUrl?: string;
 }
 
 export const Chat = () => {
@@ -32,14 +34,14 @@ export const Chat = () => {
     e.preventDefault();
     if (!input.trim() && !selectedFile) return;
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
+    const userMessage: Message = {
+      id: Date.now().toString() + '-user',
       text: input,
       sender: 'user',
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
 
     const formData = new FormData();
@@ -47,63 +49,98 @@ export const Chat = () => {
     if (selectedFile) formData.append('image', selectedFile);
 
     setIsLoading(true);
+    setSelectedFile(null);
 
     try {
-      const response = await fetch('http://localhost:5000/chat', {
+      const res = await fetch('http://localhost:5000/chat', {
         method: 'POST',
         body: formData,
       });
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (data.response) {
+      if (data.response || data.annotated_image_url) {
+        const botMessage: Message = {
+          id: Date.now().toString() + '-bot',
+          text: data.response || '',
+          sender: 'bot',
+          timestamp: new Date(),
+          imageUrl: data.annotated_image_url
+        };
+        setMessages(prev => [...prev, botMessage]);
+      } else if (data.error) {
         setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: data.response,
+          id: Date.now().toString() + '-error',
+          text: `⚠ Error: ${data.error}`,
           sender: 'bot',
           timestamp: new Date()
         }]);
       }
 
-      if (data.annotated_image_url) {
-        // Handle annotated image display
-      }
     } catch (error) {
+      console.error("Fetch error:", error);
       setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        text: "⚠ Failed to get response from server.",
+        id: Date.now().toString() + '-fetch-error',
+        text: "⚠ Failed to connect to the server.",
         sender: 'bot',
         timestamp: new Date()
       }]);
     } finally {
       setIsLoading(false);
-      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-      <div 
+    <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden flex flex-col h-[700px]">
+      <div
         ref={chatBoxRef}
-        className="h-[600px] overflow-y-auto p-6 space-y-4"
+        className="flex-1 overflow-y-auto p-6 space-y-4"
       >
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
           {messages.map((message) => (
             <motion.div
               key={message.id}
+              layout
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
               className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[80%] p-4 rounded-xl ${
+                className={`max-w-[80%] p-3 rounded-xl ${
                   message.sender === 'user'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
                 }`}
               >
-                {message.text}
+                {message.text && message.sender === 'user' ? (
+                  <p className="whitespace-pre-wrap">{message.text}</p>
+                ) : message.text && message.sender === 'bot' ? (
+                  <div className="prose prose-sm dark:prose-invert">
+                    <ReactMarkdown>
+                      {message.text}
+                    </ReactMarkdown>
+                  </div>
+                ) : null}
+
+                {message.imageUrl && (
+                  <div className="mt-2">
+                    <img
+                      src={`http://localhost:5000${message.imageUrl}`}
+                      alt="Annotated X-ray"
+                      className="max-w-xs h-auto rounded-md"
+                      onLoad={() => {
+                        if (chatBoxRef.current) {
+                           chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+                        }
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -121,7 +158,7 @@ export const Chat = () => {
         </AnimatePresence>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t dark:border-gray-700">
+      <form onSubmit={handleSubmit} className="p-4 border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
         <div className="flex space-x-4">
           <input
             type="file"
