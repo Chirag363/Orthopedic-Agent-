@@ -1,10 +1,11 @@
-// ✅ Full fixed version of Chat.tsx - adapted for annotated_image_url instead of base64
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Upload, Send, Image as ImageIcon, RotateCcw, FileDown, Loader } from 'lucide-react';
 import { API_BASE_URL } from '../config';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '../context/ThemeContext';
+
 
 interface Message {
   id: string;
@@ -96,13 +97,15 @@ export const Chat = () => {
     e.preventDefault();
     if (!input.trim() && !selectedFile) return;
 
-    const newMessage: Message = {
-      id: Date.now().toString(),
+    const userMessage: Message = {
+      id: Date.now().toString() + '-user',
       text: input,
       sender: 'user',
       timestamp: new Date()
     };
+
     setMessages(prev => [...prev, newMessage]);
+
     setInput('');
 
     const endpoint = selectedFile ? '/chatimg' : '/chat';
@@ -110,19 +113,23 @@ export const Chat = () => {
     if (input.trim()) formData.append('message', input);
     if (selectedFile) formData.append('image', selectedFile);
 
+
     const chatHistory = messages.map(m => ({
       role: m.sender === 'user' ? 'user' : 'assistant',
       content: m.text
     }));
     formData.append('chat_history', JSON.stringify(chatHistory));
 
+
     setIsLoading(true);
     try {
+
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         body: formData,
         credentials: 'include',
       });
+
 
       const data = await response.json();
       if (data.error) throw new Error(data.error);
@@ -138,7 +145,9 @@ export const Chat = () => {
 
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
+      console.error("Fetch error:", error);
       setMessages(prev => [...prev, {
+
         id: Date.now().toString(),
         text: `⚠️ **Error**\n\n${error instanceof Error ? error.message : 'Failed to get response from server.'}`,
         sender: 'bot',
@@ -146,7 +155,9 @@ export const Chat = () => {
       }]);
     } finally {
       setIsLoading(false);
-      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
