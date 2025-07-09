@@ -7,6 +7,15 @@
     --primary: 37 99 235;
     --secondary: 63 55 201;
   }
+
+  /* Add smooth transition for dark mode */
+  html {
+    @apply scroll-smooth transition-colors duration-200;
+  }
+
+  body {
+    @apply antialiased transition-colors duration-200;
+  }
 }
 
 body {
@@ -35,7 +44,7 @@ html {
   @apply bg-gray-400 dark:bg-gray-500;
 }
 
-/* Grid pattern background */
+ /*Grid pattern background */
 .bg-grid-pattern {
   background-image: linear-gradient(to right, #e5e7eb 1px, transparent 1px),
     linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);

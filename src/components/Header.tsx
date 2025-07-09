@@ -1,9 +1,11 @@
 import React from 'react';
-import { Stethoscope, Menu, X } from 'lucide-react';
+import { Stethoscope, Menu, X, Sun, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
 
 export const Header = () => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm">
@@ -19,18 +21,32 @@ export const Header = () => {
             <span className="text-xl font-bold text-gray-900 dark:text-white">Orthopedic Agent</span>
           </motion.div>
 
-          <nav className="hidden md:flex space-x-8">
-            <NavLink href="#features">Features</NavLink>
-            <NavLink href="#how-it-works">How it Works</NavLink>
-            <NavLink href="#about">About</NavLink>
-          </nav>
+          <div className="flex items-center space-x-8">
+            <nav className="hidden md:flex space-x-8">
+              <NavLink href="#features">Features</NavLink>
+              <NavLink href="#how-it-works">How it Works</NavLink>
+              <NavLink href="#about">About</NavLink>
+            </nav>
 
-          <button
-            className="md:hidden"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X /> : <Menu />}
-          </button>
+            <button
+              onClick={toggleDarkMode}
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+              aria-label="Toggle dark mode"
+            >
+              {isDarkMode ? (
+                <Sun className="h-5 w-5 text-yellow-400" />
+              ) : (
+                <Moon className="h-5 w-5 text-gray-600" />
+              )}
+            </button>
+
+            <button
+              className="md:hidden"
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {isOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
       </div>
 

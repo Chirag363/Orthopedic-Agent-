@@ -7,7 +7,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">X-Ray Buddy</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Orthopedic Assistant</h3>
             <p className="text-gray-600 dark:text-gray-300">
               AI-powered orthopedic assistant for healthcare professionals and medical students.
             </p>
@@ -48,7 +48,7 @@ export const Footer = () => {
         
         <div className="mt-8 pt-8 border-t dark:border-gray-700">
           <p className="text-center text-gray-600 dark:text-gray-300">
-            © {new Date().getFullYear()} X-Ray Buddy. All rights reserved.
+            © {new Date().getFullYear()} Orthopedic Assistant. All rights reserved.
           </p>
         </div>
       </div>
